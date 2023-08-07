@@ -1,19 +1,24 @@
 import {DataArray, Result, Runtime} from '@malloydata/malloy';
 import {MySqlConnection} from './connection/mysql_connection';
-import {DataImporter} from './data_importer';
+//import {DataImporter} from './data_importer';
 /*import {JSDOM} from 'jsdom';
 import {HTMLView} from '@malloydata/render';
 */
 export async function main() {
-  await importData();
+  await runModel();
 }
 
-export async function importData() {
-  await new DataImporter().importData();
-}
-
+// TODO: linter not working.
 export async function runModel() {
-  const runtime = new Runtime(new MySqlConnection());
+  const runtime = new Runtime(
+    new MySqlConnection({
+      host: '127.0.0.1',
+      port: 3306,
+      user: 'root',
+      password: 'Malloydev123',
+      database: 'malloytest',
+    })
+  );
   const mq =
     runtime.loadModel(`  sql: height_sql232 is { connection: "duckdb" select: """SELECT * from Persons""" }
 
@@ -47,11 +52,6 @@ export async function runModel() {
     }`);
   const qm = await mq.loadQueryByName('abc');
   const result: Result = await qm.run();
-  console.log(await qm.getSQL());
-
-  console.log(
-    `-> fn: ${result.data.field.name} ${result.data.field.isExplore()}`
-  );
 
   renderTable(result.data);
   /*const document = new JSDOM().window.document;

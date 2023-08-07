@@ -21,17 +21,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// process.env.TZ = 'America/Los_Angeles';
+import {
+  overload,
+  minScalar,
+  anyExprType,
+  sql,
+  DialectFunctionOverloadDef,
+  makeParam,
+} from '@malloydata/malloy/dist/dialect';
 
-module.exports = {
-  moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
-  setupFilesAfterEnv: ['jest-expect-message'],
-  testMatch: ['**/?(*.)spec.(ts|js)?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  transform: {
-    '^.+\\.(ts|tsx)$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.json'}],
-  },
-  testTimeout: 100000,
-  verbose: true,
-  testEnvironment: 'node',
-};
+export function fnChr(): DialectFunctionOverloadDef[] {
+  const value = makeParam('value', anyExprType('number'));
+  return [
+    overload(
+      minScalar('string'),
+      [value.param],
+      // Need to explicitly have a case for when the arg is 0, to return ''
+      // Also, cannot compare literal null with = in BigQuery, so we wrap in an IFNULL
+      sql`CASE WHEN IFNULL(${value.arg}, 1) = 0 THEN '' ELSE CHAR(${value.arg}) END`
+    ),
+  ];
+}

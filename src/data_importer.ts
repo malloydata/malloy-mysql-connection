@@ -1,4 +1,4 @@
-import {DuckDBConnection} from '@malloydata/db-duckdb';
+/*import {DuckDBConnection} from '@malloydata/db-duckdb';
 import {MySqlConnection} from './connection/mysql_connection';
 import {Connection} from '@malloydata/malloy';
 import {QueryValue} from '@malloydata/malloy/dist/model';
@@ -8,7 +8,7 @@ import {DateTime} from 'luxon';
   LookupConnection,
   SingleConnectionRuntime,
 } from '@malloydata/malloy';*/
-
+/*
 export class DataImporter {
   async importData(): Promise<void> {
     /*const conn = new BigQueryConnection(
@@ -19,7 +19,7 @@ export class DataImporter {
       }
     );*/
 
-    const sourceConnection = new DuckDBConnection(
+/* const sourceConnection = new DuckDBConnection(
       'duckdb',
       'data/duckdb_test.db',
       undefined,
@@ -62,9 +62,6 @@ export class DataImporter {
     }
     console.log(`Reading data from: ${table} from db ${sourceConnection.name}`);
 
-    /*console.log(
-      `Writing ${result.totalRows} rows to: ${table} into db ${targetConnection.name}`
-    );*/
     let rowCount = 0;
 
     let inserts: string[] = [];
@@ -127,3 +124,4 @@ export class DataImporter {
     );
   }
 }
+*/

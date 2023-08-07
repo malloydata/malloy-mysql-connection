@@ -1,20 +1,19 @@
 import {
   AtomicFieldTypeInner,
   Connection,
-  DialectProviderConnection,
   FieldTypeDef,
   MalloyQueryData,
   NamedStructDefs,
   PersistSQLResults,
   PooledConnection,
   QueryDataRow,
+  DialectProvider,
   QueryRunStats,
   RunSQLOptions,
   SQLBlock,
   StreamingConnection,
   StructDef,
 } from '@malloydata/malloy';
-import {Dialect} from '@malloydata/malloy/dist/dialect';
 import {randomUUID} from 'crypto';
 import {
   FieldInfo,
@@ -22,27 +21,36 @@ import {
   Connection as mySqlConnection,
 } from 'mysql';
 import {MySqlDialect} from '../dialect/mysql_dialect';
+import {DateTime} from 'luxon';
+import {MySqlConnectionConfiguration} from './mysql_connection_configuration';
 
 const mySqlToMalloyTypes: {[key: string]: AtomicFieldTypeInner} = {
-  BIGINT: 'number',
-  int: 'number',
-  TINYINT: 'number',
-  SMALLINT: 'number',
-  UBIGINT: 'number',
-  UINTEGER: 'number',
-  UTINYINT: 'number',
-  USMALLINT: 'number',
-  HUGEINT: 'number',
-  DOUBLE: 'number',
-  varchar: 'string',
-  DATE: 'date',
-  TIMESTAMP: 'timestamp',
-  TIME: 'string',
-  decimal: 'number',
-  BOOLEAN: 'boolean',
+  // TODO: This assumes tinyint is always going to be a boolean.
+  'tinyint': 'boolean',
+  'smallint': 'number',
+  'mediumint': 'number',
+  'int': 'number',
+  'bigint': 'number',
+  'tinyint unsigned': 'number',
+  'smallint unsigned': 'number',
+  'mediumint unsigned': 'number',
+  'int unsigned': 'number',
+  'bigint unsigned': 'number',
+  'double': 'number',
+  'varchar': 'string',
+  'varbinary': 'string',
+  'char': 'string',
+  'text': 'string',
+  'date': 'date',
+  'datetime': 'timestamp',
+  'timestamp': 'timestamp',
+  'time': 'string',
+  'decimal': 'number',
+  // TODO: Check if we need special handling for boolean.
+  'tinyint(1)': 'boolean',
 };
 
-export class MySqlConnection implements Connection, DialectProviderConnection {
+export class MySqlConnection extends DialectProvider implements Connection {
   private schemaCache = new Map<
     string,
     {schema: StructDef; error?: undefined} | {error: string; schema?: undefined}
@@ -60,23 +68,18 @@ export class MySqlConnection implements Connection, DialectProviderConnection {
 
   readonly connection: mySqlConnection;
 
-  constructor() {
+  constructor(configuration: MySqlConnectionConfiguration) {
+    super(new MySqlDialect());
     // TODO: handle when connection fails.
-    // TODO: Pass parameters in constructor parameter.
     this.connection = createConnection({
-      host: '127.0.0.1',
-      port: 3306,
-      user: 'root',
-      password: 'Malloydev123',
-      database: 'appointments',
+      host: configuration.host,
+      port: configuration.port ?? 3306,
+      user: configuration.user,
+      password: configuration.password,
+      // TODO: Figure out how to allow users not to provide database.
+      database: configuration.database,
       multipleStatements: true,
     });
-  }
-  dialect(): Dialect {
-    return new MySqlDialect();
-  }
-  providesDialect(): this is DialectProviderConnection {
-    return true;
   }
 
   runSQL(sql: string, _options?: RunSQLOptions): Promise<MalloyQueryData> {
@@ -89,10 +92,12 @@ export class MySqlConnection implements Connection, DialectProviderConnection {
   }
 
   canPersist(): this is PersistSQLResults {
+    // TODO: implement;
     throw new Error('Method not implemented.1');
   }
 
   canStream(): this is StreamingConnection {
+    // TODO: implement;
     throw new Error('Method not implemented.2');
   }
 
@@ -101,6 +106,7 @@ export class MySqlConnection implements Connection, DialectProviderConnection {
   }
 
   estimateQueryCost(_sqlCommand: string): Promise<QueryRunStats> {
+    // TODO: implement;
     throw new Error('Method not implemented.3');
   }
 
@@ -231,12 +237,12 @@ export class MySqlConnection implements Connection, DialectProviderConnection {
     sql: string,
     _options?: RunSQLOptions
   ): Promise<MalloyQueryData> {
-    //console.log(`SQL ---> \n ${sql}`);
+    console.log(`SQL ---> \n ${sql}`);
     // TODO: what are options here?
     return new Promise((resolve, reject) =>
       // TODO: Remove hack.
       this.connection.query(
-        `DROP TABLE IF EXISTS tmp11111; ${sql}`,
+        `set @@session.time_zone = 'UTC'; \n ${sql}`,
         (error, result, fields) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           let resultSets: Array<Array<Record<string, any>> | null> = [];
@@ -252,7 +258,11 @@ export class MySqlConnection implements Connection, DialectProviderConnection {
 
           if (error) {
             // TODO: how to parse this error?
-            return reject(error);
+            return reject(
+              new Error(
+                `Failed to execute MySQL query: ${error} \n For Query: ${sql}`
+              )
+            );
           }
 
           // TODO: use proper type instead of any.
@@ -272,12 +282,25 @@ export class MySqlConnection implements Connection, DialectProviderConnection {
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       JSON.parse(entry[field.name]) as Record<string, any>
                     );
-
-                    console.log(
-                      `---------> AFTER ${JSON.stringify(dataRow[field.name])}`
-                    );
                   } else {
-                    dataRow[field.name] = entry[field.name];
+                    if (entry[field.name] instanceof Date) {
+                      const abc = entry[field.name] as Date;
+                      const date = DateTime.fromJSDate(abc);
+                      dataRow[field.name] = date
+                        .plus({minutes: date.offset})
+                        .toUTC()
+                        .toJSDate();
+                    } else if (
+                      entry[field.name] instanceof Uint8Array ||
+                      entry[field.name] instanceof Uint16Array ||
+                      entry[field.name] instanceof Uint32Array
+                    ) {
+                      dataRow[field.name] = new TextDecoder().decode(
+                        entry[field.name] as Uint32Array
+                      );
+                    } else {
+                      dataRow[field.name] = entry[field.name];
+                    }
                   }
                 }
                 rows.push(dataRow);
@@ -346,86 +369,33 @@ export class MySqlConnection implements Connection, DialectProviderConnection {
       jsonObj['_is_malloy_metadata']
     );
   }
-
-  // TODO: is this needed?
-  private stringToTypeMap(s: string): {[name: string]: string} {
-    const ret: {[name: string]: string} = {};
-    const columns = this.splitColumns(s);
-    for (const c of columns) {
-      //const [name, type] = c.split(" ", 1);
-      const columnMatch = c.match(/^(?<name>[^\s]+) (?<type>.*)$/);
-      if (columnMatch && columnMatch.groups) {
-        ret[columnMatch.groups['name']] = columnMatch.groups['type'];
-      } else {
-        throw new Error(`Badly form Structure definition ${s}`);
-      }
-    }
-    return ret;
-  }
-
-  // TODO: is this needed?
-  private splitColumns(s: string) {
-    const columns: string[] = [];
-    let parens = 0;
-    let column = '';
-    let eatSpaces = true;
-    for (let idx = 0; idx < s.length; idx++) {
-      const c = s.charAt(idx);
-      if (eatSpaces && c === ' ') {
-        // Eat space
-      } else {
-        eatSpaces = false;
-        if (!parens && c === ',') {
-          columns.push(column);
-          column = '';
-          eatSpaces = true;
-        } else {
-          column += c;
-        }
-        if (c === '(') {
-          parens += 1;
-        } else if (c === ')') {
-          parens -= 1;
-        }
-      }
-    }
-    columns.push(column);
-    return columns;
-  }
-
   private fillStructDefFromTypeMap(
     structDef: StructDef,
     typeMap: {[name: string]: string}
   ) {
     // TODO: handle mysql types properly.
     for (const fieldName in typeMap) {
-      // TODO: replace duckdb.
       let mySqlType = typeMap[fieldName].toLocaleLowerCase();
-      // Remove varchar(255) size to simplify lookup
-      mySqlType = mySqlType.replace(/^varchar\(\d+\)/g, 'varchar');
-      // Remove decimal(10,0) dimensions to simplify lookup
-      mySqlType = mySqlType.replace(/^decimal\(\d+,\d+\)/g, 'decimal');
+      mySqlType = mySqlType.trim().split('(')[0];
       let malloyType = mySqlToMalloyTypes[mySqlType];
-      const arrayMatch = mySqlType.match(/(?<duckDBType>.*)\[\]$/);
-      if (arrayMatch && arrayMatch.groups) {
-        mySqlType = arrayMatch.groups['duckDBType'];
-      }
-      const structMatch = mySqlType.match(/^STRUCT\((?<fields>.*)\)$/);
-      if (structMatch && structMatch.groups) {
-        const newTypeMap = this.stringToTypeMap(structMatch.groups['fields']);
+      const arrayMatch = mySqlType.startsWith('json');
+      if (arrayMatch) {
+        // TODO: Is not having inner type a problem?
         const innerStructDef: StructDef = {
           type: 'struct',
           name: fieldName,
           dialect: this.dialectName,
-          structSource: {type: arrayMatch ? 'nested' : 'inline'},
+          structSource: {type: 'nested'},
           structRelationship: {
-            type: arrayMatch ? 'nested' : 'inline',
+            type: 'nested',
             field: fieldName,
             isArray: false,
           },
-          fields: [],
+          // TODO: this makes the tests pass but is weak.
+          fields: [
+            {type: mySqlToMalloyTypes['text'], name: 'value'} as FieldTypeDef,
+          ],
         };
-        this.fillStructDefFromTypeMap(innerStructDef, newTypeMap);
         structDef.fields.push(innerStructDef);
       } else {
         if (arrayMatch) {

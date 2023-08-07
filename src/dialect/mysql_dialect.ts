@@ -47,22 +47,12 @@ import {MYSQL_FUNCTIONS} from './functions';
 
 const castMap: Record<string, string> = {
   number: 'double precision',
-  string: 'varchar',
+  string: 'varchar(255)',
 };
 
-const pgExtractionMap: Record<string, string> = {
-  day_of_week: 'dow',
-  day_of_year: 'doy',
-};
-
-const pgMakeIntervalMap: Record<string, string> = {
-  year: 'years',
-  month: 'months',
-  week: 'weeks',
-  day: 'days',
-  hour: 'hours',
-  minute: 'mins',
-  second: 'secs',
+const msExtractionMap: Record<string, string> = {
+  day_of_week: 'DAYOFWEEK',
+  day_of_year: 'DAYOFYEAR',
 };
 
 const inSeconds: Record<string, number> = {
@@ -76,9 +66,11 @@ const inSeconds: Record<string, number> = {
 export class MySqlDialect extends Dialect {
   name = 'mysql';
   defaultNumberType = 'DOUBLE PRECISION';
-  udfPrefix = 'pg_temp.__udf';
+  defaultDecimalType = 'DECIMAL';
+  udfPrefix = 'ms_temp.__udf';
   hasFinalStage = false;
-  stringTypeName = 'VARCHAR';
+  // TODO: this may not be enough for lager casts.
+  stringTypeName = 'VARCHAR(255)';
   divisionIsInteger = true;
   supportsSumDistinctFunction = false;
   unnestWithNumbers = false;
@@ -90,6 +82,7 @@ export class MySqlDialect extends Dialect {
   dontUnionIndex = false;
   supportsQualify = false;
   globalFunctions = MYSQL_FUNCTIONS;
+  supportsNesting = false;
 
   quoteTablePath(tablePath: string): string {
     return tablePath
@@ -99,35 +92,26 @@ export class MySqlDialect extends Dialect {
   }
 
   sqlGroupSetTable(groupSetCount: number): string {
-    // TODO: EXCER
     return `CROSS JOIN (select number - 1 as group_set from JSON_TABLE(cast(concat("[1", repeat(",1", ${groupSetCount}), "]") as JSON),"$[*]" COLUMNS(number FOR ORDINALITY)) group_set) as group_set`;
   }
 
-  sqlAnyValue(groupSet: number, fieldName: string): string {
+  sqlAnyValue(_groupSet: number, fieldName: string): string {
     return `MAX(${fieldName})`;
   }
 
   mapFields(fieldList: DialectFieldList): string {
-    // TODO: EXCER
     return fieldList
       .map(f => `\n  ${f.sqlExpression} as ${f.sqlOutputName}`)
       .join(', ');
   }
 
   sqlAggregateTurtle(
-    groupSet: number,
-    fieldList: DialectFieldList,
-    orderBy: string | undefined,
-    limit: number | undefined
+    _groupSet: number,
+    _fieldList: DialectFieldList,
+    _orderBy: string | undefined,
+    _limit: number | undefined
   ): string {
-    // TODO: EXCER
-    let tail = '';
-    if (limit !== undefined) {
-      tail = `, 'limit', ${limit}`;
-    }
-    const fields = this.mapFieldsForJsonObject(fieldList);
-    // TODO: __stage0 is hardcoded.
-    return `JSON_ARRAY_APPEND(COALESCE((SELECT JSON_ARRAYAGG((CASE WHEN group_set=${groupSet} THEN JSON_OBJECT(${fields}) END)) ${orderBy}), '[]'), '$', JSON_OBJECT('_is_malloy_metadata', true${tail}))`;
+    throw new Error('MySql dialect does not support nesting.');
   }
 
   sqlAnyValueTurtle(groupSet: number, fieldList: DialectFieldList): string {
@@ -140,7 +124,6 @@ export class MySqlDialect extends Dialect {
     groupSet: number,
     sqlName: string
   ): string {
-    // TODO: EXCER
     return `MAX(CASE WHEN group_set=${groupSet} AND ${name} IS NOT NULL THEN ${name} END) as ${sqlName}`;
   }
 
@@ -148,7 +131,6 @@ export class MySqlDialect extends Dialect {
     groupSet: number,
     fieldList: DialectFieldList
   ): string {
-    // TODO: EXCER
     const fields = this.mapFieldsForJsonObject(fieldList);
     const nullValues = this.mapFieldsForJsonObject(fieldList, true);
 
@@ -164,26 +146,26 @@ export class MySqlDialect extends Dialect {
     _isInNestedPipeline: boolean
   ): string {
     if (isArray) {
-      if (needDistinctKey) {
-        return `LEFT JOIN UNNEST(ARRAY((SELECT jsonb_build_object('__row_id', row_number() over (), 'value', v) FROM UNNEST(${source}) as v))) as ${alias} ON true`;
-      } else {
-        return `LEFT JOIN UNNEST(ARRAY((SELECT jsonb_build_object('value', v) FROM UNNEST(${source}) as v))) as ${alias} ON true`;
-      }
+      throw new Error('MySql dialect does not support nesting.');
     } else if (needDistinctKey) {
-      // return `UNNEST(ARRAY(( SELECT AS STRUCT GENERATE_UUID() as __distinct_key, * FROM UNNEST(${source})))) as ${alias}`;
-      return `LEFT JOIN UNNEST(ARRAY((SELECT jsonb_build_object('__row_number', row_number() over())|| __xx::jsonb as b FROM  JSONB_ARRAY_ELEMENTS(${source}) __xx ))) as ${alias} ON true`;
+      return `LEFT JOIN JSON_TABLE(cast(concat("[1",repeat(",1",JSON_LENGTH(${source})),"]") as JSON),"$[*]" COLUMNS(__row_id FOR ORDINALITY)) as ${alias} ON ${alias}.\`__row_id\` <= JSON_LENGTH(${source})`;
     } else {
-      // return `CROSS JOIN LATERAL JSONB_ARRAY_ELEMENTS(${source}) as ${alias}`;
-      return `LEFT JOIN JSONB_ARRAY_ELEMENTS(${source}) as ${alias} ON true`;
+      return `LEFT JOIN (SELECT json_unquote(json_extract(${source}, CONCAT('$[', __row_id - 1, ']'))) as ${alias}  FROM (SELECT json_unquote(json_extract(${source}, CONCAT('$[', __row_id, ']'))) as d) as b LEFT JOIN JSON_TABLE(cast(concat("[1",repeat(",1",JSON_LENGTH(${source}) - 1),"]") as JSON),"$[*]" COLUMNS(__row_id FOR ORDINALITY)) as e on TRUE) as __tbl ON true`;
     }
   }
 
   sqlSumDistinctHashedKey(sqlDistinctKey: string): string {
-    return `('x' || MD5(${sqlDistinctKey}::varchar))::bit(64)::bigint::DECIMAL(65,0)  *18446744073709551616 + ('x' || SUBSTR(MD5(${sqlDistinctKey}::varchar),17))::bit(64)::bigint::DECIMAL(65,0)`;
+    sqlDistinctKey = `CONCAT(${sqlDistinctKey}, '')`;
+    const upperPart = `CAST(CONV(SUBSTRING(MD5(${sqlDistinctKey}), 1, 16), 16, 10) AS DECIMAL(38, 0)) * 4294967296`;
+    const lowerPart = `CAST(CONV(SUBSTRING(MD5(${sqlDistinctKey}), 16, 8), 16, 10) AS DECIMAL(38, 0))`;
+    // See the comment below on `sql_sum_distinct` for why we multiply by this decimal
+    const precisionShiftMultiplier = '0.000000001';
+    return `(${upperPart} + ${lowerPart}) * ${precisionShiftMultiplier}`;
   }
 
   sqlGenerateUUID(): string {
-    return 'UUID()';
+    // TODO: This causes the query to become slow, figure out another way to make UUID deterministic.
+    return 'CONCAT(ROW_NUMBER() OVER(), UUID())';
   }
 
   sqlFieldReference(
@@ -193,16 +175,18 @@ export class MySqlDialect extends Dialect {
     isNested: boolean,
     _isArray: boolean
   ): string {
-    let ret = `${alias}->>'${fieldName}'`;
+    let ret = `${alias}.\`${fieldName}\``;
     if (isNested) {
       switch (fieldType) {
         case 'string':
+          ret = `CONCAT(${ret}, '')`;
           break;
+        // TODO: Fix this.
         case 'number':
-          ret = `(${ret})::double precision`;
+          ret = `CAST(${ret} as double)`;
           break;
         case 'struct':
-          ret = `(${ret})::jsonb`;
+          ret = `CAST(${ret} as JSON)`;
           break;
       }
       return ret;
@@ -212,39 +196,35 @@ export class MySqlDialect extends Dialect {
   }
 
   sqlUnnestPipelineHead(
-    isSingleton: boolean,
-    sourceSQLExpression: string
+    _isSingleton: boolean,
+    _sourceSQLExpression: string
   ): string {
-    if (isSingleton) {
-      return `UNNEST(ARRAY((SELECT ${sourceSQLExpression})))`;
-    } else {
-      return `JSONB_ARRAY_ELEMENTS(${sourceSQLExpression})`;
-    }
+    throw new Error('MySql dialect does not support nesting.');
   }
 
   sqlCreateFunction(id: string, funcText: string): string {
+    // TODO:
     return `CREATE FUNCTION ${id}(JSONB) RETURNS JSONB AS $$\n${indent(
       funcText
     )}\n$$ LANGUAGE SQL;\n`;
   }
 
   sqlCreateFunctionCombineLastStage(lastStageName: string): string {
+    // TODO:
     return `SELECT ARRAY((SELECT AS STRUCT * FROM ${lastStageName}))\n`;
   }
 
-  sqlSelectAliasAsStruct(alias: string): string {
-    return `ROW(${alias})`;
+  sqlSelectAliasAsStruct(alias: string, physicalFieldNames: string[]): string {
+    return `JSON_OBJECT(${physicalFieldNames
+      .map(name => `'${name}', \`${alias}.${name}\``)
+      .join(',')})`;
   }
 
-  // TODO
   sqlMaybeQuoteIdentifier(identifier: string): string {
     return `\`${identifier}\``;
   }
 
   // TODO: Check what this is.
-  // The simple way to do this is to add a comment on the table
-  //  with the expiration time. https://www.postgresql.org/docs/current/sql-comment.html
-  //  and have a reaper that read comments.
   sqlCreateTableAsSelect(_tableName: string, _sql: string): string {
     throw new Error('Not implemented Yet');
   }
@@ -254,40 +234,60 @@ export class MySqlDialect extends Dialect {
   }
 
   sqlTrunc(qi: QueryInfo, sqlTime: TimeValue, units: TimestampUnit): Expr {
-    // adjusting for monday/sunday weeks
-    const week = units === 'week';
-    const truncThis = week
-      ? mkExpr`${sqlTime.value} + INTERVAL '1' DAY`
-      : sqlTime.value;
+    let truncThis = sqlTime.value;
+    if (units === 'week') {
+      truncThis = mkExpr`DATE_SUB(${truncThis}, INTERVAL DAYOFWEEK(${truncThis}) - 1 DAY)`;
+    }
     if (sqlTime.valueType === 'timestamp') {
       const tz = qtz(qi);
       if (tz) {
-        const civilSource = mkExpr`(${truncThis}::TIMESTAMPTZ AT TIME ZONE '${tz}')`;
-        let civilTrunc = mkExpr`DATE_TRUNC('${units}', ${civilSource})`;
-        // MTOY todo ... only need to do this if this is a date ...
-        civilTrunc = mkExpr`${civilTrunc}::TIMESTAMP`;
-        const truncTsTz = mkExpr`${civilTrunc} AT TIME ZONE '${tz}'`;
-        return mkExpr`(${truncTsTz})::TIMESTAMP`;
+        const civilSource = mkExpr`(CONVERT_TZ(${truncThis}, 'UTC','${tz}'))`;
+        const civilTrunc = mkExpr`${this.truncToUnit(civilSource, units)}`;
+        const truncTsTz = mkExpr`CONVERT_TZ(${civilTrunc}, '${tz}', 'UTC')`;
+        return mkExpr`(${truncTsTz})`; // TODO: should it cast?
       }
     }
-    let result = mkExpr`DATE_TRUNC('${units}', ${truncThis})`;
-    if (week) {
-      result = mkExpr`(${result} - INTERVAL '1' DAY)`;
-    }
+    const result = mkExpr`${this.truncToUnit(truncThis, units)}`;
     return result;
   }
 
+  truncToUnit(expr: Expr, units: TimestampUnit) {
+    let format = mkExpr`'%Y-%m-%d %H:%i:%s'`;
+    switch (units) {
+      case 'minute':
+        format = mkExpr`'%Y-%m-%d %H:%i:00'`;
+        break;
+      case 'hour':
+        format = mkExpr`'%Y-%m-%d %H:00:00'`;
+        break;
+      case 'day':
+      case 'week':
+        format = mkExpr`'%Y-%m-%d 00:00:00'`;
+        break;
+      case 'month':
+        format = mkExpr`'%Y-%m-01 00:00:00'`;
+        break;
+      case 'quarter':
+        format = mkExpr`CASE WHEN MONTH(${expr}) > 9 THEN '%Y-10-01 00:00:00' WHEN MONTH(${expr}) > 6 THEN '%Y-07-01 00:00:00' WHEN MONTH(${expr}) > 3 THEN '%Y-04-01 00:00:00' ELSE '%Y-01-01 00:00:00' end`;
+        break;
+      case 'year':
+        format = mkExpr`'%Y-01-01 00:00:00'`;
+        break;
+    }
+
+    return mkExpr`TIMESTAMP(DATE_FORMAT(${expr}, ${format}))`;
+  }
+
   sqlExtract(qi: QueryInfo, from: TimeValue, units: ExtractUnit): Expr {
-    const pgUnits = pgExtractionMap[units] || units;
+    const msUnits = msExtractionMap[units] || units;
     let extractFrom = from.value;
     if (from.valueType === 'timestamp') {
       const tz = qtz(qi);
       if (tz) {
-        extractFrom = mkExpr`(${extractFrom}::TIMESTAMPTZ AT TIME ZONE '${tz}')`;
+        extractFrom = mkExpr`CONVERT_TZ(${extractFrom}, 'UTC', '${tz}')`;
       }
     }
-    const extracted = mkExpr`EXTRACT(${pgUnits} FROM ${extractFrom})`;
-    return units === 'day_of_week' ? mkExpr`(${extracted}+1)` : extracted;
+    return mkExpr`${msUnits}(${extractFrom})`;
   }
 
   sqlAlterTime(
@@ -299,8 +299,11 @@ export class MySqlDialect extends Dialect {
     if (timeframe === 'quarter') {
       timeframe = 'month';
       n = mkExpr`${n}*3`;
+    } else if (timeframe === 'week') {
+      timeframe = 'day';
+      n = mkExpr`${n}*7`;
     }
-    const interval = mkExpr`make_interval(${pgMakeIntervalMap[timeframe]}=>${n})`;
+    const interval = mkExpr`INTERVAL ${n} ${timeframe} `;
     return mkExpr`((${expr.value})${op}${interval})`;
   }
 
@@ -308,24 +311,25 @@ export class MySqlDialect extends Dialect {
     const op = `${cast.srcType}::${cast.dstType}`;
     const tz = qtz(qi);
     if (op === 'timestamp::date' && tz) {
-      const tstz = mkExpr`${cast.expr}::TIMESTAMPTZ`;
-      return mkExpr`CAST((${tstz}) AT TIME ZONE '${tz}' AS DATE)`;
+      return mkExpr`CAST(CONVERT_TZ(${cast.expr}, 'UTC', '${tz}') AS DATE) `;
     } else if (op === 'date::timestamp' && tz) {
-      return mkExpr`CAST((${cast.expr})::TIMESTAMP AT TIME ZONE '${tz}' AS TIMESTAMP)`;
+      return mkExpr` CONVERT_TZ(${cast.expr}, '${tz}', 'UTC')`;
     }
     if (cast.srcType !== cast.dstType) {
       const dstType = castMap[cast.dstType] || cast.dstType;
       if (cast.safe) {
         throw new Error("Mysql dialect doesn't support Safe Cast");
       }
-      const castFunc = 'CAST';
-      return mkExpr`${castFunc}(${cast.expr}  AS ${dstType})`;
+      if (cast.dstType === 'string') {
+        return mkExpr`CONCAT(${cast.expr}, '')`;
+      }
+      return mkExpr`CAST(${cast.expr}  AS ${dstType})`;
     }
     return cast.expr;
   }
 
   sqlRegexpMatch(expr: Expr, regexp: Expr): Expr {
-    return mkExpr`(${expr} ~ ${regexp})`;
+    return mkExpr`REGEXP_LIKE(${expr},${regexp})`;
   }
 
   sqlLiteralTime(
@@ -339,7 +343,7 @@ export class MySqlDialect extends Dialect {
     }
     const tz = timezone || qtz(qi);
     if (tz) {
-      return `TIMESTAMPTZ '${timeString} ${tz}'::TIMESTAMP`;
+      return ` CONVERT_TZ('${timeString}', '${tz}', 'UTC')`;
     }
     return `TIMESTAMP '${timeString}'`;
   }
@@ -348,8 +352,8 @@ export class MySqlDialect extends Dialect {
     let lVal = from.value;
     let rVal = to.value;
     if (inSeconds[units]) {
-      lVal = mkExpr`EXTRACT(EPOCH FROM ${lVal})`;
-      rVal = mkExpr`EXTRACT(EPOCH FROM ${rVal})`;
+      lVal = mkExpr`UNIX_TIMESTAMP(${lVal})`;
+      rVal = mkExpr`UNIX_TIMESTAMP(${rVal})`;
       const duration = mkExpr`${rVal}-${lVal}`;
       return units === 'second'
         ? mkExpr`FLOOR(${duration})`
@@ -358,32 +362,16 @@ export class MySqlDialect extends Dialect {
     throw new Error(`Unknown or unhandled MySql time unit: ${units}`);
   }
 
-  sqlSumDistinct(key: string, value: string, funcName: string): string {
-    // return `sum_distinct(list({key:${key}, val: ${value}}))`;
-    return `(
-      SELECT ${funcName}((a::json->>'f2')::DOUBLE PRECISION) as value
-      FROM (
-        SELECT UNNEST(array_agg(distinct row_to_json(row(${key},${value}))::text)) a
-      ) a
-    )`;
+  sqlSumDistinct(_key: string, _value: string, _funcName: string): string {
+    throw new Error('MySql dialect does not support nesting.');
   }
 
-  // TODO this does not preserve the types of the arguments, meaning we have to hack
-  // around this in the definitions of functions that use this to cast back to the correct
-  // type (from text). See the MySql implementation of stddev.
   sqlAggDistinct(
-    key: string,
-    values: string[],
-    func: (valNames: string[]) => string
+    _key: string,
+    _values: string[],
+    _func: (valNames: string[]) => string
   ): string {
-    return `(
-      SELECT ${func(values.map((v, i) => `(a::json->>'f${i + 2}')`))} as value
-      FROM (
-        SELECT UNNEST(array_agg(distinct row_to_json(row(${key},${values.join(
-      ','
-    )}))::text)) a
-      ) a
-    )`;
+    throw new Error('MySql dialect does not support nesting.');
   }
 
   sqlSampleTable(tableSQL: string, sample: Sampling | undefined): string {
@@ -392,23 +380,26 @@ export class MySqlDialect extends Dialect {
         sample = this.defaultSampling;
       }
       if (isSamplingRows(sample)) {
-        return `(SELECT * FROM ${tableSQL} TABLESAMPLE SYSTEM_ROWS(${sample.rows}))`;
+        return `(SELECT * FROM ${tableSQL} ORDER BY rand() LIMIT ${sample.rows} )`;
       } else if (isSamplingPercent(sample)) {
-        return `(SELECT * FROM ${tableSQL} TABLESAMPLE SYSTEM (${sample.percent}))`;
+        return `(SELECT * FROM (SELECT ROW_NUMBER() OVER (ORDER BY rand()) as __row_number, __source_tbl.* from ${tableSQL} as __source_tbl) as __rand_tbl where __row_number % FLOOR(100.0 / ${sample.percent}) = 1)`;
       }
     }
     return tableSQL;
   }
 
   sqlOrderBy(orderTerms: string[]): string {
-    // TODO: EXCER
     return `ORDER BY ${orderTerms
-      .map(t => `${t.trim().split(' ')[0]} IS NULL DESC, ${t}`)
+      .map(
+        t =>
+          `${t.trim().slice(0, t.trim().lastIndexOf(' '))} IS NULL DESC, ${t}`
+      )
       .join(',')}`;
   }
 
   sqlLiteralString(literal: string): string {
-    return "'" + literal.replace(/'/g, "''") + "'";
+    const noVirgule = literal.replace(/\\/g, '\\\\');
+    return "'" + noVirgule.replace(/'/g, "\\'") + "'";
   }
 
   sqlLiteralRegexp(literal: string): string {
@@ -428,5 +419,9 @@ export class MySqlDialect extends Dialect {
           }\n`
       )
       .join(', ');
+  }
+
+  castToString(expression: string): string {
+    return `CONCAT(${expression}, '')`;
   }
 }
