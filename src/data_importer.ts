@@ -1,17 +1,10 @@
 /* eslint-disable no-console */
-import {DuckDBConnection} from '@malloydata/db-duckdb';
+/*import {DuckDBConnection} from '@malloydata/db-duckdb';
 import {MySqlConnection} from './connection/mysql_connection';
 import {QueryValue} from '@malloydata/malloy/dist/model';
 import {DateTime} from 'luxon';
 export class DataImporter {
   async importData(): Promise<void> {
-    /*const conn = new BigQueryConnection(
-      'bigquery',
-      {},
-      {
-        defaultProject: 'malloy-data',
-      }
-    );*/
 
     const sourceConnection = new DuckDBConnection(
       'duckdb',
@@ -123,4 +116,4 @@ export class DataImporter {
       `Unsupported type: ${JSON.stringify(queryValue)} ${typeof queryValue}`
     );
   }
-}
+}*/

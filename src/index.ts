@@ -16,7 +16,7 @@ export async function runModel() {
       port: 3306,
       user: 'root',
       password: 'Malloydev123',
-      database: 'malloytest',
+      database: 'appointments',
     })
   );
   const mq =
@@ -24,6 +24,11 @@ export async function runModel() {
 
     source: persons is table('mysql:Persons') {
       measure: sumi is count(distinct concat(City, height))
+    }
+
+    query: abc2 is persons -> {
+      project:
+        *
     }
 
     query: abc is persons -> {
@@ -50,7 +55,7 @@ export async function runModel() {
         }
       }
     }`);
-  const qm = await mq.loadQueryByName('abc');
+  const qm = await mq.loadQueryByName('abc2');
   const result: Result = await qm.run();
 
   renderTable(result.data);

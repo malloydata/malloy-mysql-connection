@@ -139,10 +139,6 @@ export class MySqlConnection extends DialectProvider implements Connection {
     return {schemas, errors};
   }
 
-  /*
-   INSERT INTO Persons (AppointmentId, City, Name, Cost, Vaccines, Month) VALUES (1, 'San Diego', 'Sebastian', 250.50, 2, 1);
-   */
-
   public async fetchSchemaForSQLBlock(
     sqlRef: SQLBlock
   ): Promise<

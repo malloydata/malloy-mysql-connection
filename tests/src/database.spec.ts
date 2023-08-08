@@ -1,4 +1,3 @@
-// eslint-disable-next-line node/no-unpublished-import
 import {
   exprSharedTests,
   indexSharedTests,
@@ -10,7 +9,6 @@ import {
   sqlExpressionsSharedTests,
   testRuntimeFor,
   timeSharedTests,
-  // eslint-disable-next-line node/no-unpublished-import
 } from '@malloydata/malloy-tests';
 import {MySqlConnection} from '../../src/connection/mysql_connection';
 
@@ -33,7 +31,10 @@ noModelSharedTests(
     `CAST(CONCAT('["',REPLACE(\`${column}\`, '${splitChar}', '","'), '"]') AS JSON)`
 );
 
-exprSharedTests(new RuntimeList([testRuntimeFor(new MySqlConnection(config))]));
+
+exprSharedTests(
+  new RuntimeList([testRuntimeFor(new MySqlConnection(config))])
+);
 
 // TODO: Missing time test.
 timeSharedTests(new RuntimeList([testRuntimeFor(new MySqlConnection(config))]));
@@ -55,3 +56,4 @@ problemsSharedTests(
 sqlExpressionsSharedTests(
   new RuntimeList([testRuntimeFor(new MySqlConnection(config))])
 );
+
