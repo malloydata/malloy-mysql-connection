@@ -18,6 +18,7 @@ nix-shell --pure --keep NPM_TOKEN --keep PACKAGES --keep BRANCH_NAME --command "
   npm run lint && npm run build # TODO: run tests here too.
   # Publish
   echo Publishing \$PACKAGES
+  VERSION=\$(jq -r .version ./lerna.json)
   for package in \$PACKAGES; do
     echo Publishing \$package \$VERSION
     npm publish -w \$package --access=public
@@ -26,6 +27,8 @@ nix-shell --pure --keep NPM_TOKEN --keep PACKAGES --keep BRANCH_NAME --command "
   git tag v\$VERSION
   git push origin v\$VERSION
   # Bump version
+  npx lerna version patch --yes --no-push --no-git-tag-version
+  VERSION=\$(jq -r .version ./lerna.json)
   echo Updating to \$VERSION
   # Push new version to github
   git commit -am "Version \$VERSION-dev"
