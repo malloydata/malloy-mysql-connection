@@ -31,10 +31,7 @@ noModelSharedTests(
     `CAST(CONCAT('["',REPLACE(\`${column}\`, '${splitChar}', '","'), '"]') AS JSON)`
 );
 
-
-exprSharedTests(
-  new RuntimeList([testRuntimeFor(new MySqlConnection(config))])
-);
+exprSharedTests(new RuntimeList([testRuntimeFor(new MySqlConnection(config))]));
 
 // TODO: Missing time test.
 timeSharedTests(new RuntimeList([testRuntimeFor(new MySqlConnection(config))]));
@@ -56,4 +53,3 @@ problemsSharedTests(
 sqlExpressionsSharedTests(
   new RuntimeList([testRuntimeFor(new MySqlConnection(config))])
 );
-
