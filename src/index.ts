@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import {DataArray, Result, Runtime} from '@malloydata/malloy';
 import {MySqlConnection} from './connection/mysql_connection';
 //import {DataImporter} from './data_importer';
