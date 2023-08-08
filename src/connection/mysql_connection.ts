@@ -23,6 +23,7 @@ import {
 import {MySqlDialect} from '../dialect/mysql_dialect';
 import {DateTime} from 'luxon';
 import {MySqlConnectionConfiguration} from './mysql_connection_configuration';
+import {decode} from 'fastestsmallesttextencoderdecoder';
 
 const mySqlToMalloyTypes: {[key: string]: AtomicFieldTypeInner} = {
   // TODO: This assumes tinyint is always going to be a boolean.
@@ -290,7 +291,7 @@ export class MySqlConnection extends DialectProvider implements Connection {
                       entry[field.name] instanceof Uint16Array ||
                       entry[field.name] instanceof Uint32Array
                     ) {
-                      dataRow[field.name] = new TextDecoder().decode(
+                      dataRow[field.name] = decode(
                         entry[field.name] as Uint32Array
                       );
                     } else {
