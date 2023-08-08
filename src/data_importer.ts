@@ -1,14 +1,8 @@
-/*import {DuckDBConnection} from '@malloydata/db-duckdb';
+/* eslint-disable no-console */
+import {DuckDBConnection} from '@malloydata/db-duckdb';
 import {MySqlConnection} from './connection/mysql_connection';
-import {Connection} from '@malloydata/malloy';
 import {QueryValue} from '@malloydata/malloy/dist/model';
 import {DateTime} from 'luxon';
-/*import {
-  Runtime,
-  LookupConnection,
-  SingleConnectionRuntime,
-} from '@malloydata/malloy';*/
-/*
 export class DataImporter {
   async importData(): Promise<void> {
     /*const conn = new BigQueryConnection(
@@ -19,13 +13,19 @@ export class DataImporter {
       }
     );*/
 
-/* const sourceConnection = new DuckDBConnection(
+    const sourceConnection = new DuckDBConnection(
       'duckdb',
       'data/duckdb_test.db',
       undefined,
       {rowLimit: 100000000}
     );
-    const targetConnection = new MySqlConnection();
+    const targetConnection = new MySqlConnection({
+      host: '127.0.0.1',
+      port: 3306,
+      user: 'root',
+      password: 'Malloydev123',
+      database: 'malloytest',
+    });
 
     const tables = [
       'malloytest.aircraft',
@@ -124,4 +124,3 @@ export class DataImporter {
     );
   }
 }
-*/

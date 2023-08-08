@@ -237,7 +237,6 @@ export class MySqlConnection extends DialectProvider implements Connection {
     sql: string,
     _options?: RunSQLOptions
   ): Promise<MalloyQueryData> {
-    console.log(`SQL ---> \n ${sql}`);
     // TODO: what are options here?
     return new Promise((resolve, reject) =>
       // TODO: Remove hack.
