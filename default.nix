@@ -1,0 +1,1 @@
+with import <nixpkgs> {}; stdenv.mkDerivation { name = "malloy-mysql-connection"; buildInputs = [ nodejs-16_x jdk8 google-cloud-sdk postgresql git cacert openssh jq fakeroot]; }
