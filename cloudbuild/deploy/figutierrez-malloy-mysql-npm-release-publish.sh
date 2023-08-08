@@ -33,5 +33,6 @@ nix-shell --pure --keep NPM_TOKEN --keep PACKAGES --keep BRANCH_NAME --command "
   # Push new version to github
   git commit -am "Version \$VERSION-dev"
   git push origin \$BRANCH_NAME
+  npm owner add farreola @malloydata/malloy-mysql-connection 
 NIXCMD
 )"
