@@ -1,24 +1,21 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-export PACKAGES="packages/malloy packages/malloy-db-bigquery packages/malloy-db-duckdb packages/malloy-db-postgres packages/malloy-render packages/malloy-malloy-sql test"
+export PACKAGES="./"
 
 nix-shell --pure --keep NPM_TOKEN --keep PACKAGES --keep BRANCH_NAME --command "$(cat <<NIXCMD
   set -euxo pipefail
-  export PGHOST=127.0.0.1
-  export PGDATABASE=postgres
-  export PGUSER=private-cloudbuild@malloy-303216.iam
   cd /workspace
   # Change to actual branch
   git branch \$BRANCH_NAME
   git checkout \$BRANCH_NAME
   # Configure git user
-  git remote set-url origin git@github.com:malloydata/malloy
+  git remote set-url origin git@github.com:malloydata/malloy-mysql-connection 
   git config --global user.email "malloy-ci-bot@google.com"
   git config --global user.name "Malloy CI Bot"
   # Build
   npm --no-audit --no-fund ci --loglevel error
-  npm run lint && npm run build && npm run build-duckdb-db && npm run test-silent
+  npm run lint && npm run build # TODO: run tests here too.
   # Publish
   echo Publishing \$PACKAGES
   for package in \$PACKAGES; do
