@@ -1,6 +1,6 @@
 steps:
   - id: git-ssh-key
-    name: "gcr.io/cloud-builders/gcloud2"
+    name: "gcr.io/cloud-builders/gcloud"
     secretEnv: ["GITHUB_MALLOY_MYSQL_CONNECTION"]
     entrypoint: "bash"
     args:
