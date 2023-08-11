@@ -1,5 +1,5 @@
 steps:
-  - id: git-ssh-key
+  - id: git-ssh-key2
     name: "gcr.io/cloud-builders/gcloud"
     secretEnv: ["GITHUB_MALLOY_MYSQL_CONNECTION"]
     entrypoint: "bash"
@@ -38,7 +38,7 @@ steps:
     volumes:
       - name: "ssh"
         path: /root/.ssh
-    waitFor: ["git-ssh-key", "proxy-install"]
+    waitFor: ["git-ssh-key2", "proxy-install"]
 options:
   logging: CLOUD_LOGGING_ONLY
   machineType: "E2_HIGHCPU_8"
