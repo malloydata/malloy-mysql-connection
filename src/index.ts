@@ -1,15 +1,16 @@
-/* eslint-disable no-console */
-import {DataArray, Result, Runtime} from '@malloydata/malloy';
-import {MySqlConnection} from './connection/mysql_connection';
-//import {DataImporter} from './data_importer';
-/*import {JSDOM} from 'jsdom';
-import {HTMLView} from '@malloydata/render';
-*/
+// import {DataArray, Result, Runtime} from '@malloydata/malloy';
+
+export {MySqlConnectionConfiguration} from './connection/mysql_connection_configuration';
+
+export {MySqlConnection} from './connection/mysql_connection';
+
+/*
+
+
 export async function main() {
   await runModel();
 }
 
-// TODO: linter not working.
 export async function runModel() {
   const runtime = new Runtime(
     new MySqlConnection({
@@ -65,7 +66,7 @@ export async function runModel() {
     dataStyles: {},
   });
 
-  console.log(`${html.innerHTML}`);*/
+  console.log(`${html.innerHTML}`);
 }
 
 function renderTable(data: DataArray) {
@@ -92,3 +93,4 @@ function renderTable(data: DataArray) {
 }
 
 main();
+*/

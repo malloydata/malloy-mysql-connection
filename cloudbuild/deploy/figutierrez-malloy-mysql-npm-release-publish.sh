@@ -20,9 +20,6 @@ nix-shell --pure --keep NPM_TOKEN --keep PACKAGES --keep BRANCH_NAME --command "
   echo Publishing \$PACKAGES
   VERSION=\$(jq -r .version ./lerna.json)
   for package in \$PACKAGES; do
-    npm unpublish @malloydata/malloy-mysql-connection@1.0.0
-    npm unpublish @malloydata/malloy-mysql-connection@1.0.1
-    npm unpublish @malloydata/malloy-mysql-connection@1.0.2
     echo Publishing \$package \$VERSION
     npm publish \$package --access=public
   done
