@@ -3,7 +3,7 @@
 # Workspace related exclusions
 *.tsbuildinfo
 node_modules
-build
+dist
 test/dist
 
 # misc
