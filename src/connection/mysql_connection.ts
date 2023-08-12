@@ -25,7 +25,6 @@ import {MySqlDialect} from '../dialect/mysql_dialect';
 import {DateTime} from 'luxon';
 import {MySqlConnectionConfiguration} from './mysql_connection_configuration';
 import {decode} from 'fastestsmallesttextencoderdecoder';
-import 'reflect-metadata';
 
 const mySqlToMalloyTypes: {[key: string]: AtomicFieldTypeInner} = {
   // TODO: This assumes tinyint is always going to be a boolean.
