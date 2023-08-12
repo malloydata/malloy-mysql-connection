@@ -13,6 +13,7 @@ import {
   SQLBlock,
   StreamingConnection,
   StructDef,
+  TestableConnection,
 } from '@malloydata/malloy';
 import {randomUUID} from 'crypto';
 import {
@@ -52,7 +53,10 @@ const mySqlToMalloyTypes: {[key: string]: AtomicFieldTypeInner} = {
   'tinyint(1)': 'boolean',
 };
 
-export class MySqlConnection extends DialectProvider implements Connection {
+export class MySqlConnection
+  extends DialectProvider
+  implements Connection, TestableConnection
+{
   private schemaCache = new Map<
     string,
     {schema: StructDef; error?: undefined} | {error: string; schema?: undefined}
@@ -82,6 +86,10 @@ export class MySqlConnection extends DialectProvider implements Connection {
       database: configuration.database,
       multipleStatements: true,
     });
+  }
+
+  public async test(): Promise<void> {
+    await this.runRawSQL('SELECT 1');
   }
 
   runSQL(sql: string, _options?: RunSQLOptions): Promise<MalloyQueryData> {
