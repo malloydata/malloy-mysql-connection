@@ -22,7 +22,7 @@ export async function runModel() {
     })
   );
   const mq =
-    runtime.loadModel(`  sql: height_sql232 is { connection: "duckdb" select: """SELECT * from Persons""" }
+    runtime.loadModel(`  sql: height_sql232 is { connection: "mysql" select: """SELECT * from Persons""" }
 
     source: persons is table('mysql:Persons') {
       measure: sumi is count(distinct concat(City, height))
