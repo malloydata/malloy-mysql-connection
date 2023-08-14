@@ -47,5 +47,5 @@ availableSecrets:
   secretManager:
     - versionName: projects/malloy-303216/secrets/npm-publish/versions/latest
       env: "NPM_TOKEN"
-    - versionName: projects/malloy-303216/secrets/github-ssh-key/versions/latest
+    - versionName: projects/malloy-303216/secrets/github-malloy-mysql-connection/versions/latest
       env: "GITHUB_MALLOY_MYSQL_CONNECTION"
