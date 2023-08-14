@@ -1,12 +1,12 @@
 steps:
   - id: git-ssh-key
     name: "gcr.io/cloud-builders/gcloud"
-    secretEnv: ["GITHUB_MALLOY_MYSQL_CONNECTION"]
+    secretEnv: ["GITHUB_SSH_KEY"]
     entrypoint: "bash"
     args:
       - -c
       - |
-        echo "$$GITHUB_MALLOY_MYSQL_CONNECTION" >> /root/.ssh/id_rsa
+        echo "$$GITHUB_SSH_KEY" >> /root/.ssh/id_rsa
         chmod 400 /root/.ssh/id_rsa
         cp cloudbuild/known_hosts.github /root/.ssh/known_hosts
     volumes:
@@ -32,7 +32,7 @@ steps:
       - -c
       - "(/workspace/cloud_sql_proxy -enable_iam_login -instances=malloy-303216:us-central1:malloy-dev=tcp:3306 -log_debug_stdout > /dev/null & sleep 2) && (./cloudbuild/deploy/$TRIGGER_NAME.sh)"
     timeout: "1800s"
-    secretEnv: ["NPM_TOKEN", "GITHUB_MALLOY_MYSQL_CONNECTION"]
+    secretEnv: ["NPM_TOKEN", "GITHUB_SSH_KEY"]
     env:
       - "BRANCH_NAME=$BRANCH_NAME"
     volumes:
@@ -48,4 +48,4 @@ availableSecrets:
     - versionName: projects/malloy-303216/secrets/npm-publish/versions/latest
       env: "NPM_TOKEN"
     - versionName: projects/malloy-303216/secrets/github-malloy-mysql-connection/versions/latest
-      env: "GITHUB_MALLOY_MYSQL_CONNECTION"
+      env: "GITHUB_SSH_KEY"
