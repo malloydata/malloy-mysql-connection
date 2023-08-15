@@ -17,7 +17,7 @@
     },
     "dependencies": {
       "@jest/globals": "^29.4.3",
-      "@malloydata/malloy": "^0.0.73",
+      "@malloydata/malloy": "^0.0.75",
       "jsdom": "^22.1.0",
       "luxon": "^1.26.4",
       "madge": "^6.0.0"
@@ -25,6 +25,6 @@
     "devDependencies": {
       "@types/jsdom": "^21.1.1",
       "@types/luxon": "^1.26.4",
-      "@malloydata/malloy-tests": "^0.0.73"
+      "@malloydata/malloy-tests": "^0.0.75"
     }
   }
