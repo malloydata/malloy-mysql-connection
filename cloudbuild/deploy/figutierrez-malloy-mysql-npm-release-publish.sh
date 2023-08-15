@@ -14,10 +14,8 @@ nix-shell --pure --keep NPM_TOKEN --keep BRANCH_NAME --command "$(cat <<NIXCMD
   # Build
   npm --no-audit --no-fund ci --loglevel error
   npm run lint && npm run build # TODO: run tests here too.
-  # Publish
+  # Publish and bump version
   echo Publishing and updating version
-  # Bump version
-  echo Updating to \$VERSION
   # Push new version to github
   npm version patch --force && npm publish ./ --access=public
   git status
