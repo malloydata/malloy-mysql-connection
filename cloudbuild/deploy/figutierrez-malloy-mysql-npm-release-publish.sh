@@ -18,8 +18,6 @@ nix-shell --pure --keep NPM_TOKEN --keep BRANCH_NAME --command "$(cat <<NIXCMD
   echo Publishing and updating version
   # Push new version to github
   npm version patch --force && npm publish ./ --access=public
-  git status
-  git commit -am "Updating version"
   git push origin \$BRANCH_NAME
 NIXCMD
 )"
