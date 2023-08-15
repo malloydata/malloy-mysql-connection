@@ -1,6 +1,6 @@
 {
   "name": "@malloydata/malloy-mysql-connection",
-  "version": "0.0.22",
+  "version": "0.0.23",
   "description": "Provides a connection and dialect to be able to execute Malloy models against MySQL databases.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
