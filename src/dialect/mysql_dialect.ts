@@ -137,21 +137,23 @@ export class MySqlDialect extends Dialect {
     return `COALESCE(MAX(CASE WHEN group_set=${groupSet} THEN JSON_OBJECT(${fields}) END),JSON_OBJECT(${nullValues}))`;
   }
 
+  // TODO: investigate if its possible to make it work when source is table.field.
   sqlUnnestAlias(
-    source: string,
-    alias: string,
-    fieldList: DialectFieldList,
-    needDistinctKey: boolean,
-    isArray: boolean,
+    _source: string,
+    _alias: string,
+    _fieldList: DialectFieldList,
+    _needDistinctKey: boolean,
+    _isArray: boolean,
     _isInNestedPipeline: boolean
   ): string {
-    if (isArray) {
-      throw new Error('MySql dialect does not support nesting.');
+    throw new Error('MySql dialect does not support unnest.');
+    /* if (isArray) {
+      throw new Error('MySql dialect does not support unnest.');
     } else if (needDistinctKey) {
       return `LEFT JOIN JSON_TABLE(cast(concat("[1",repeat(",1",JSON_LENGTH(${source})),"]") as JSON),"$[*]" COLUMNS(__row_id FOR ORDINALITY)) as ${alias} ON ${alias}.\`__row_id\` <= JSON_LENGTH(${source})`;
     } else {
       return `LEFT JOIN (SELECT json_unquote(json_extract(${source}, CONCAT('$[', __row_id - 1, ']'))) as ${alias}  FROM (SELECT json_unquote(json_extract(${source}, CONCAT('$[', __row_id, ']'))) as d) as b LEFT JOIN JSON_TABLE(cast(concat("[1",repeat(",1",JSON_LENGTH(${source}) - 1),"]") as JSON),"$[*]" COLUMNS(__row_id FOR ORDINALITY)) as e on TRUE) as __tbl ON true`;
-    }
+    } */
   }
 
   sqlSumDistinctHashedKey(sqlDistinctKey: string): string {
@@ -216,7 +218,7 @@ export class MySqlDialect extends Dialect {
 
   sqlSelectAliasAsStruct(alias: string, physicalFieldNames: string[]): string {
     return `JSON_OBJECT(${physicalFieldNames
-      .map(name => `'${name}', \`${alias}.${name}\``)
+      .map(name => `'${name.replace(/`/g, '')}', \`${alias}\`.${name}`)
       .join(',')})`;
   }
 
@@ -423,5 +425,9 @@ export class MySqlDialect extends Dialect {
 
   castToString(expression: string): string {
     return `CONCAT(${expression}, '')`;
+  }
+
+  concat(...values: string[]): string {
+    return `CONCAT(${values.join(',')})`;
   }
 }

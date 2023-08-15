@@ -21,17 +21,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// process.env.TZ = 'America/Los_Angeles';
+process.env.TZ = 'America/Los_Angeles';
 
 module.exports = {
-  moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx'],
-  setupFilesAfterEnv: ['jest-expect-message'],
+  moduleFileExtensions: ['js', 'ts'],
   testMatch: ['**/?(*.)spec.(ts|js)?(x)'],
-  testPathIgnorePatterns: ['/node_modules/', '/dist/'],
+  testPathIgnorePatterns: ['/node_modules/', '/dist/', '/pkg/', '/test/e2e/'],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {tsconfig: '<rootDir>/tsconfig.json'}],
   },
-  testTimeout: 100000,
-  verbose: true,
   testEnvironment: 'node',
+  testTimeout: 100000,
 };

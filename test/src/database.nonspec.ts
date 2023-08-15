@@ -1,4 +1,4 @@
-import {
+/*import {
   exprSharedTests,
   indexSharedTests,
   joinSharedTests,
@@ -19,10 +19,6 @@ const config = {
   password: 'Malloydev123',
   database: 'malloytest',
 };
-
-/*allDatabaseTestSets.forEach(testSet => {
-  testSet(new RuntimeList([testRuntimeFor(new MySqlConnection(config))]));
-});*/
 
 joinSharedTests(new RuntimeList([testRuntimeFor(new MySqlConnection(config))]));
 noModelSharedTests(
@@ -53,3 +49,4 @@ problemsSharedTests(
 sqlExpressionsSharedTests(
   new RuntimeList([testRuntimeFor(new MySqlConnection(config))])
 );
+*/

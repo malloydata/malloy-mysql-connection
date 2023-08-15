@@ -1,0 +1,30 @@
+{
+    "name": "tests",
+    "license": "MIT",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "homepage": "https://github.com/malloydata/malloy#readme",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/malloydata/malloy"
+    },
+    "scripts": {
+      "lint": "eslint '**/*.ts{,x}'",
+      "lint-fix": "eslint '**/*.ts{,x}' --fix",
+      "test": "jest --config=../jest.config.js",
+      "build": "tsc --build",
+      "clean": "tsc --build --clean"
+    },
+    "dependencies": {
+      "@jest/globals": "^29.4.3",
+      "@malloydata/malloy": "^0.0.73",
+      "jsdom": "^22.1.0",
+      "luxon": "^1.26.4",
+      "madge": "^6.0.0"
+    },
+    "devDependencies": {
+      "@types/jsdom": "^21.1.1",
+      "@types/luxon": "^1.26.4",
+      "@malloydata/malloy-tests": "^0.0.73"
+    }
+  }

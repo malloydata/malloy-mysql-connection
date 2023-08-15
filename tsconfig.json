@@ -1,11 +1,33 @@
 {
   "extends": "./node_modules/gts/tsconfig-google.json",
+  "exclude": ["**/node_modules"],
   "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-  },
-  "include": [
-    "src/**/*.ts",
-    "test/**/*.ts"
-  ]
+    "esModuleInterop": true,
+    "noEmit": true,
+    "module": "commonjs",
+    "allowSyntheticDefaultImports": true,
+    "downlevelIteration": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "declaration": true,
+    "composite": true,
+    "strict": true,
+    "noImplicitAny": false,
+    "lib": [
+      "es2019",
+      "es2020.bigint",
+      "es2020.string",
+      "es2020.symbol.wellknown",
+      "dom"
+    ],
+    "moduleResolution": "node",
+    "target": "es2019",
+    "experimentalDecorators": true,
+    "sourceMap": true,
+    "useUnknownInCatchVariables": false,
+    "forceConsistentCasingInFileNames": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "outDir": "dist"
+  }
 }

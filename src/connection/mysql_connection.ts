@@ -15,7 +15,7 @@ import {
   StructDef,
   TestableConnection,
 } from '@malloydata/malloy';
-import {randomUUID} from 'crypto';
+import {randomUUID, createHash} from 'crypto';
 import {
   FieldInfo,
   createConnection,
@@ -54,7 +54,7 @@ const mySqlToMalloyTypes: {[key: string]: AtomicFieldTypeInner} = {
 
 export class MySqlConnection
   extends DialectProvider
-  implements Connection, TestableConnection
+  implements Connection, TestableConnection, PersistSQLResults
 {
   private schemaCache = new Map<
     string,
@@ -86,6 +86,15 @@ export class MySqlConnection
       multipleStatements: true,
     });
   }
+  async manifestTemporaryTable(sqlCommand: string): Promise<string> {
+    const hash = createHash('md5').update(sqlCommand).digest('hex');
+    const tableName = `tt${hash}`;
+
+    const cmd = `CREATE TEMPORARY TABLE IF NOT EXISTS ${tableName} AS (${sqlCommand});`;
+    // console.log(cmd);
+    await this.runRawSQL(cmd);
+    return tableName;
+  }
 
   public async test(): Promise<void> {
     await this.runRawSQL('SELECT 1');
@@ -101,8 +110,7 @@ export class MySqlConnection
   }
 
   canPersist(): this is PersistSQLResults {
-    // TODO: implement;
-    throw new Error('Method not implemented.1');
+    return true;
   }
 
   canStream(): this is StreamingConnection {
