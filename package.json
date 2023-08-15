@@ -12,6 +12,7 @@
   "scripts": {
     "build": "tsc --build",
     "test": "jest --runInBand",
+    "test-silent": "JEST_SILENT_REPORTER_SHOW_PATHS=true jest --runInBand --reporters jest-silent-reporter",
     "run": "ts-node src/index.ts",
     "lint": "gts lint",
     "clean": "gts clean",
