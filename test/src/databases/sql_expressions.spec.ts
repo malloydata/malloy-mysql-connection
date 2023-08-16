@@ -26,6 +26,7 @@
 
 // No prebuilt shared model, each test is complete.  Makes debugging easier.
 
+// eslint-disable-next-line node/no-unpublished-import
 import {RuntimeList} from '@malloydata/malloy-tests';
 import * as malloy from '@malloydata/malloy';
 import {MySqlConnection} from '../../../src';
