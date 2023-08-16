@@ -22,6 +22,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// eslint-disable-next-line node/no-unpublished-import
 import {RuntimeList, mkSqlEqWith} from '@malloydata/malloy-tests';
 import {SingleConnectionRuntime} from '@malloydata/malloy';
 import {MySqlConnection} from '../../../src';
