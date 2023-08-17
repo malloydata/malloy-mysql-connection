@@ -22,18 +22,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// eslint-disable-next-line node/no-unpublished-import
 import {RuntimeList, mkSqlEqWith} from '@malloydata/malloy-tests';
 import {SingleConnectionRuntime} from '@malloydata/malloy';
 import {MySqlConnection} from '../../../src';
 
 const runtimes = new RuntimeList([
   new SingleConnectionRuntime<MySqlConnection>(
-    new MySqlConnection({
-      host: '127.0.0.1',
-      user: 'root',
-      password: 'Malloydev123',
-      database: 'appointments',
-    })
+    new MySqlConnection(
+      {
+        host: '127.0.0.1',
+        user: 'root',
+        password: 'Malloydev123',
+        database: 'appointments',
+      },
+      _dialect => {}
+    )
   ),
 ]);
 

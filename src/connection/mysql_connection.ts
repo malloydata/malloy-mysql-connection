@@ -1,13 +1,15 @@
 import {
   AtomicFieldTypeInner,
   Connection,
+  ConnectionConfig,
+  ConnectionConfigSchema,
+  ConnectionFactory,
   FieldTypeDef,
   MalloyQueryData,
   NamedStructDefs,
   PersistSQLResults,
   PooledConnection,
   QueryDataRow,
-  DialectProvider,
   QueryRunStats,
   RunSQLOptions,
   SQLBlock,
@@ -25,6 +27,41 @@ import {MySqlDialect} from '../dialect/mysql_dialect';
 import {DateTime} from 'luxon';
 import {MySqlConnectionConfiguration} from './mysql_connection_configuration';
 import {decode} from 'fastestsmallesttextencoderdecoder';
+import {Dialect} from '@malloydata/malloy/dist/dialect';
+
+class MysqlConnectionFactory implements ConnectionFactory {
+  readonly connectionName: string;
+  readonly configSchema: ConnectionConfigSchema;
+
+  constructor() {
+    this.connectionName = 'mysql';
+    this.configSchema = [
+      {name: 'host', label: 'Host', type: 'string'},
+      {
+        name: 'port',
+        label: 'Port',
+        type: 'number',
+        isOptional: true,
+        defaultValue: 3306,
+      },
+      {name: 'password', label: 'Password', type: 'string', isSecret: true},
+      {name: 'user', label: 'Username', type: 'string'},
+      {name: 'database', label: 'Database', type: 'string'},
+    ];
+  }
+
+  createConnection(
+    connectionConfig: ConnectionConfig,
+    dialectRegistrar?: ((dialect: Dialect) => void) | undefined
+  ) {
+    return new MySqlConnection(
+      connectionConfig as MySqlConnectionConfiguration,
+      dialectRegistrar
+    );
+  }
+}
+
+export const connectionFactory = new MysqlConnectionFactory();
 
 const mySqlToMalloyTypes: {[key: string]: AtomicFieldTypeInner} = {
   // TODO: This assumes tinyint is always going to be a boolean.
@@ -52,8 +89,9 @@ const mySqlToMalloyTypes: {[key: string]: AtomicFieldTypeInner} = {
   'tinyint(1)': 'boolean',
 };
 
+const dialect = new MySqlDialect();
+
 export class MySqlConnection
-  extends DialectProvider
   implements Connection, TestableConnection, PersistSQLResults
 {
   private schemaCache = new Map<
@@ -68,13 +106,20 @@ export class MySqlConnection
   >();
 
   get dialectName(): string {
-    return 'mysql';
+    return dialect.name;
   }
 
   readonly connection: mySqlConnection;
 
-  constructor(configuration: MySqlConnectionConfiguration) {
-    super(new MySqlDialect());
+  constructor(
+    configuration: MySqlConnectionConfiguration,
+    dialectRegistrar?: (dialect: Dialect) => void
+  ) {
+    if (dialectRegistrar === undefined) {
+      throw new Error('Need a dialect registrar.');
+    }
+
+    dialectRegistrar(dialect);
     // TODO: handle when connection fails.
     this.connection = createConnection({
       host: configuration.host,
@@ -178,7 +223,7 @@ export class MySqlConnection
   }
 
   get name(): string {
-    return 'mysql';
+    return connectionFactory.connectionName;
   }
 
   // TODO: make sure this is exercised.

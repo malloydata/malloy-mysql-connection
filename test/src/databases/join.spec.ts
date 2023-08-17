@@ -23,6 +23,7 @@
 
 /* eslint-disable no-console */
 
+// eslint-disable-next-line node/no-unpublished-import
 import {RuntimeList} from '@malloydata/malloy-tests';
 import {SingleConnectionRuntime} from '@malloydata/malloy';
 import {MySqlConnection} from '../../../src';

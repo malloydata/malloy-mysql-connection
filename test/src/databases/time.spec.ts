@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 /*
  * Copyright 2023 Google LLC
  *
@@ -22,6 +21,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+// eslint-disable-next-line node/no-unpublished-import
 import {RuntimeList, runQuery, mkSqlEqWith} from '@malloydata/malloy-tests';
 import * as malloy from '@malloydata/malloy';
 import {MySqlConnection} from '../../../src';

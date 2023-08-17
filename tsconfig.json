@@ -1,9 +1,9 @@
 {
   "extends": "./node_modules/gts/tsconfig-google.json",
-  "exclude": ["**/node_modules"],
+  "exclude": ["**/node_modules", "**/dist"],
   "compilerOptions": {
     "esModuleInterop": true,
-    "noEmit": true,
+    //"noEmit": true,
     "module": "commonjs",
     "allowSyntheticDefaultImports": true,
     "downlevelIteration": true,
@@ -28,6 +28,7 @@
     "useUnknownInCatchVariables": false,
     "forceConsistentCasingInFileNames": true,
     "noPropertyAccessFromIndexSignature": true,
+    "rootDirs": ["src", "test/src"],
     "outDir": "dist"
   }
 }

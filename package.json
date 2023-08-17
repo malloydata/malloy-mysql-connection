@@ -2,8 +2,8 @@
   "name": "@malloydata/malloy-mysql-connection",
   "version": "0.0.23",
   "description": "Provides a connection and dialect to be able to execute Malloy models against MySQL databases.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "workspaces": {
     "packages": [
       "test"
@@ -41,8 +41,8 @@
   },
   "homepage": "https://github.com/malloydata/malloy-mysql-connection#readme",
   "dependencies": {
-    "@malloydata/db-bigquery": "^0.0.73",
-    "@malloydata/malloy": "^0.0.73",
+    "@malloydata/db-bigquery": "^0.0.77",
+    "@malloydata/malloy": "^0.0.77",
     "@types/fastestsmallesttextencoderdecoder": "^1.0.0",
     "@types/mysql": "^2.15.21",
     "fastestsmallesttextencoderdecoder": "^1.0.22",
@@ -52,7 +52,7 @@
     "mysql": "^2.18.1"
   },
   "devDependencies": {
-    "@malloydata/malloy-tests": "^0.0.73",
+    "@malloydata/malloy-tests": "^0.0.77",
     "@jest/globals": "^26.6.2",
     "@types/jest": "^29.2.1",
     "@types/jest-expect-message": "^1.0.3",
