@@ -1,5 +1,7 @@
 // import {DataArray, Result, Runtime} from '@malloydata/malloy';
 
+export {connectionFactory} from './connection/mysql_connection';
+
 export {MySqlConnectionConfiguration} from './connection/mysql_connection_configuration';
 
 export {MySqlConnection} from './connection/mysql_connection';

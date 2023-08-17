@@ -29,12 +29,15 @@ import {MySqlConnection} from '../../../src';
 
 const runtimes = new RuntimeList([
   new SingleConnectionRuntime<MySqlConnection>(
-    new MySqlConnection({
-      host: '127.0.0.1',
-      user: 'root',
-      password: 'Malloydev123',
-      database: 'appointments',
-    })
+    new MySqlConnection(
+      {
+        host: '127.0.0.1',
+        user: 'root',
+        password: 'Malloydev123',
+        database: 'appointments',
+      },
+      _dialect => {}
+    )
   ),
 ]);
 
