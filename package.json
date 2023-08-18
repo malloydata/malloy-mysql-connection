@@ -45,7 +45,6 @@
     "@types/fastestsmallesttextencoderdecoder": "^1.0.0",
     "@types/mysql": "^2.15.21",
     "fastestsmallesttextencoderdecoder": "^1.0.22",
-    "jsdom": "^22.1.0",
     "luxon": "^3.3.0",
     "mysql": "^2.18.1"
   },
