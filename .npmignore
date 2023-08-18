@@ -1,0 +1,6 @@
+src/
+*.map
+tsconfig*
+*.spec
+test/
+cloud_sql_proxy
