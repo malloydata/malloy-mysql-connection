@@ -4,3 +4,12 @@ tsconfig*
 *.spec
 test/
 cloud_sql_proxy
+.editorconfig
+.eslintignore
+.eslintrc.json
+.gitignore
+.prettierrc.js
+default.nix
+jest.config.js
+README.md
+cloudbuild/
