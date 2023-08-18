@@ -44,7 +44,7 @@
   "devDependencies": {
     "@malloydata/malloy": "^0.0.77",
     "@malloydata/malloy-tests": "^0.0.77",
-    "@malloydata/malloy-mysql-connection": "^0.0.27",
+    "@malloydata/malloy-mysql-connection": "^0.0.28",
     "@jest/globals": "^26.6.2",
     "@types/jest": "^29.2.1",
     "@types/jest-expect-message": "^1.0.3",
