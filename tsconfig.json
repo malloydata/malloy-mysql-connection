@@ -28,7 +28,7 @@
     "useUnknownInCatchVariables": false,
     "forceConsistentCasingInFileNames": true,
     "noPropertyAccessFromIndexSignature": true,
-    "rootDirs": ["src", "test/src"],
+    "rootDirs": ["src"],
     "outDir": "dist"
   }
 }

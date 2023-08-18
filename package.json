@@ -11,7 +11,7 @@
   },
   "scripts": {
     "build": "tsc --build",
-    "test": "jest --runInBand",
+    "test": "npm test -ws",
     "test-silent": "JEST_SILENT_REPORTER_SHOW_PATHS=true jest --runInBand --reporters jest-silent-reporter",
     "run": "ts-node src/index.ts",
     "lint": "gts lint",
@@ -21,8 +21,8 @@
     "prepare": "npm run compile",
     "pretest": "npm run compile",
     "posttest": "npm run lint",
-    "malloy-link": "npm --no-fund --no-audit link @malloydata/malloy @malloydata/malloy-tests",
-    "malloy-unlink": "npm --no-fund --no-save --no-audit unlink @malloydata/malloy @malloydata/malloy-tests && npm --no-fund --no-audit install --force",
+    "malloy-link": "npm --no-fund --no-audit link @malloydata/malloy",
+    "malloy-unlink": "npm --no-fund --no-save --no-audit unlink @malloydata/malloy && npm --no-fund --no-audit install --force",
     "malloy-update": "npm install  --no-fund --no-audit --save-exact $(echo $npm_package_config_malloy_packages | sed -E 's/(@malloydata\\/[-a-z]+)/\\1@latest/g')"
   },
   "repository": {
