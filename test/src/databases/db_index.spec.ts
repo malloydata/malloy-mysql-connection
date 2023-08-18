@@ -27,16 +27,20 @@
 // eslint-disable-next-line node/no-unpublished-import
 import {RuntimeList} from '@malloydata/malloy-tests';
 import {SingleConnectionRuntime} from '@malloydata/malloy';
-import {MySqlConnection} from '../../../src';
+import {MySqlConnection} from '@malloydata/malloy-mysql-connection';
+import {registerDialect} from '@malloydata/malloy/dist/dialect';
 
 const runtimes = new RuntimeList([
   new SingleConnectionRuntime<MySqlConnection>(
-    new MySqlConnection({
-      host: '127.0.0.1',
-      user: 'root',
-      password: 'Malloydev123',
-      database: 'appointments',
-    })
+    new MySqlConnection(
+      {
+        host: '127.0.0.1',
+        user: 'root',
+        password: 'Malloydev123',
+        database: 'appointments',
+      },
+      dialect => registerDialect(dialect)
+    )
   ),
 ]);
 
